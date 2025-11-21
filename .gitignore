@@ -38,8 +38,12 @@ Build/
 Builds/
 Logs/
 UserSettings/
-*.csproj
 *.unityproj
+
+# C# / .NET
+bin/
+obj/
+*.csproj
 *.sln
 *.suo
 *.user
@@ -54,3 +58,5 @@ UserSettings/
 # Test files
 coverage/
 .nyc_output/
+WsClientTest/bin
+WsClientTest/obj

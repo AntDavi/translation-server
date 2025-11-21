@@ -1,0 +1,76 @@
+// src/translation.js
+import axios from "axios";
+
+const endpoint = process.env.AZURE_TRANSLATOR_ENDPOINT;
+const key = process.env.AZURE_TRANSLATOR_KEY;
+const region = process.env.AZURE_TRANSLATOR_REGION;
+
+if (!endpoint || !key || !region) {
+  console.warn(
+    "[WARN] Azure Translator env vars missing. Check AZURE_TRANSLATOR_ENDPOINT, AZURE_TRANSLATOR_KEY, AZURE_TRANSLATOR_REGION"
+  );
+}
+
+/**
+ * Traduz um texto usando o Azure Translator.
+ * @param {Object} params
+ * @param {string} params.text - Texto original
+ * @param {string} params.from - Idioma de origem (ex: "pt-BR")
+ * @param {string} params.to   - Idioma de destino (ex: "en-US")
+ */
+export async function translateText({ text, from, to }) {
+  if (!text) return "";
+
+  // Se origem = destino, não precisa traduzir
+  if (!to || from === to) {
+    return text;
+  }
+
+  if (!endpoint || !key || !region) {
+    console.error("[ERROR] Azure Translator not configured correctly.");
+    // fallback pra não quebrar:
+    return text;
+  }
+
+  try {
+    const url = `${endpoint}/translate`;
+
+    const response = await axios({
+      method: "post",
+      url,
+      params: {
+        "api-version": "3.0",
+        from, // se quiser deixar autodetect, pode remover esse campo
+        to, // pode ser "en-US", "pt-BR", etc.
+      },
+      headers: {
+        "Ocp-Apim-Subscription-Key": key,
+        "Ocp-Apim-Subscription-Region": region,
+        "Content-type": "application/json",
+      },
+      data: [
+        {
+          Text: text,
+        },
+      ],
+    });
+
+    const translations = response.data?.[0]?.translations;
+    if (!translations || translations.length === 0) {
+      console.warn(
+        "[WARN] No translations returned from Azure.",
+        response.data
+      );
+      return text;
+    }
+
+    return translations[0].text;
+  } catch (err) {
+    console.error(
+      "[ERROR] Failed to translate text:",
+      err.response?.data || err.message
+    );
+    // fallback pra não travar a app
+    return text;
+  }
+}
