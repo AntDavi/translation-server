@@ -1,5 +1,5 @@
 import { translateText } from "./translation.js";
-import { getRoomClients } from "./room.js";
+import { getClientsInRoom } from "./room.js";
 
 export async function handleMessage(ws, msg, clients, connId = "?") {
   const msgTimestamp = new Date().toLocaleTimeString("pt-BR");
@@ -42,11 +42,11 @@ function handleJoin(ws, msg, clients, connId) {
   clients.set(ws, { clientId, roomId, language });
 
   // Contar clientes na sala
-  const roomClients = getRoomClients(roomId, clients);
+  const roomClients = getClientsInRoom(clients, roomId);
   console.log(`📊 Clientes na sala "${roomId}": ${roomClients.length}`);
   console.log(
     `📝 Idiomas na sala: ${[
-      ...new Set(roomClients.map((c) => c[1].language)),
+      ...new Set(roomClients.map((c) => c.meta.language)),
     ].join(", ")}`
   );
 
@@ -72,7 +72,7 @@ async function handleUtterance(ws, msg, clients, connId) {
   console.log(`🆔 ID da mensagem: ${utteranceId}`);
 
   // Obter clientes na sala
-  const roomClients = getRoomClients(roomId, clients);
+  const roomClients = getClientsInRoom(clients, roomId);
   console.log(`\n📊 Clientes na sala "${roomId}": ${roomClients.length}`);
 
   if (roomClients.length === 0) {
@@ -85,7 +85,7 @@ async function handleUtterance(ws, msg, clients, connId) {
   // Para cada cliente na sala
   console.log(`\n🔄 ENVIANDO PARA CADA CLIENTE NA SALA:`);
   let index = 0;
-  for (const [clientWs, meta] of roomClients) {
+  for (const { ws: clientWs, meta } of roomClients) {
     index++;
     console.log(
       `\n  [${index}/${roomClients.length}] Cliente: ${meta.clientId}`
