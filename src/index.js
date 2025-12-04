@@ -2,7 +2,7 @@ import "dotenv/config";
 import { WebSocketServer } from "ws";
 import { handleMessage, handleDisconnect } from "./websocket.js";
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8600;
 
 // Map de conexões -> metadata do cliente
 // ws => { clientId, roomId, language }

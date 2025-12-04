@@ -14,15 +14,15 @@ public class TranslationChatClient
     private ClientWebSocket _ws;
     private CancellationTokenSource _cts;
     private string _serverUrl;
-    private string _clientId;
-    private string _roomId;
-    private string _language;
+    private string _clientId = string.Empty;
+    private string _roomId = string.Empty;
+    private string _language = string.Empty;
     private bool _isConnected;
 
-    public event Action<string, string, string> OnMessageReceived; // speakerId, originalText, translatedText
-    public event Action<string> OnError;
-    public event Action OnConnected;
-    public event Action OnDisconnected;
+    public event Action<string, string, string>? OnMessageReceived; // speakerId, originalText, translatedText
+    public event Action<string>? OnError;
+    public event Action? OnConnected;
+    public event Action? OnDisconnected;
 
     public TranslationChatClient(string serverUrl = "ws://localhost:8080")
     {
@@ -151,7 +151,7 @@ public class TranslationChatClient
             if (!root.TryGetProperty("type", out var typeElement))
                 return;
 
-            var type = typeElement.GetString();
+            var type = typeElement.GetString() ?? string.Empty;
 
             switch (type)
             {
@@ -177,10 +177,10 @@ public class TranslationChatClient
     /// </summary>
     private void HandleTranscription(JsonElement root)
     {
-        var speakerId = root.GetProperty("speakerId").GetString();
-        var text = root.GetProperty("text").GetString();
-        var originalLang = root.GetProperty("originalLanguage").GetString();
-        var targetLang = root.GetProperty("targetLanguage").GetString();
+        var speakerId = root.GetProperty("speakerId").GetString() ?? string.Empty;
+        var text = root.GetProperty("text").GetString() ?? string.Empty;
+        var originalLang = root.GetProperty("originalLanguage").GetString() ?? string.Empty;
+        var targetLang = root.GetProperty("targetLanguage").GetString() ?? string.Empty;
 
         // Não exibir tradução da própria mensagem para o mesmo idioma
         if (speakerId == _clientId && targetLang == _language)
@@ -242,18 +242,18 @@ public class Program
 
         // Solicitar informações do usuário
         Console.Write("Seu nome: ");
-        string nome = Console.ReadLine();
+        string nome = Console.ReadLine() ?? string.Empty;
 
         Console.Write("ID da sala: ");
-        string sala = Console.ReadLine();
+        string sala = Console.ReadLine() ?? string.Empty;
 
         Console.Write("Seu idioma (pt-BR, en-US, es-ES, etc): ");
-        string idioma = Console.ReadLine();
+        string idioma = Console.ReadLine() ?? string.Empty;
 
         Console.Write("URL do servidor (deixe vazio para ws://localhost:8080): ");
-        string serverUrl = Console.ReadLine();
+        string serverUrl = Console.ReadLine() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(serverUrl))
-            serverUrl = "ws://localhost:8080";
+            serverUrl = "ws://localhost:8600";
 
         Console.WriteLine();
 
@@ -267,7 +267,7 @@ public class Program
 
         try
         {
-            await client.ConnectAsync(nome, sala, idioma);
+            await client.ConnectAsync(nome ?? string.Empty, sala ?? string.Empty, idioma ?? string.Empty);
 
             // Loop de mensagens
             while (client.IsConnected)
