@@ -42,47 +42,35 @@ wss.on("connection", (ws) => {
       );
       console.log(`📏 Tamanho: ${rawData.length} bytes`);
 
-      // Tentar parse como JSON
+      // Parse obrigatório como JSON
       let msg;
       try {
         msg = JSON.parse(rawData);
-        if (!msg.type) {
-          console.error(`❌ Tipo de mensagem desconhecido: ${msg.type}`);
-          ws.send(JSON.stringify({ type: "error", message: "Mensagem sem tipo definido." }));
-          return;
-        }
         console.log(`✅ JSON válido detectado`);
         console.log(`📋 Tipo de mensagem: ${msg.type}`);
         console.log(`📋 Conteúdo:`);
-        console.log(JSON.stringify(msg, null, 2));q
-      } catch (parseError) {
-        // String simples - converter para utterance automático
-        console.log(`⚠️  Não é JSON, detectado como string simples`);
-        console.log(`📝 Texto recebido: "${rawData}"`);
-
-        // Obter metadata do cliente (se já fez join)
-        const clientData = clients.get(ws);
-
-        console.log(`\n🔄 CONVERSÃO AUTOMÁTICA (Compatibilidade)`);
-        console.log(`ℹ️  clientData encontrado: ${clientData ? "SIM" : "NÃO"}`);
-        if (clientData) {
-          console.log(`   - clientId: ${clientData.clientId}`);
-          console.log(`   - roomId: ${clientData.roomId}`);
-          console.log(`   - language: ${clientData.language}`);
-        }
-
-        // Criar mensagem utterance automaticamente
-        msg = {
-          type: "utterance",
-          utteranceId: `msg-${Date.now()}`,
-          speakerId: clientData?.clientId || "unknown",
-          roomId: clientData?.roomId || "default-room",
-          language: clientData?.language || "pt-BR",
-          text: rawData,
-        };
-
-        console.log(`✅ Mensagem convertida para:`);
         console.log(JSON.stringify(msg, null, 2));
+
+        if (!msg.type) {
+          console.error(`❌ Mensagem sem tipo definido`);
+          ws.send(
+            JSON.stringify({
+              type: "error",
+              message: "Mensagem sem tipo definido.",
+            })
+          );
+          return;
+        }
+      } catch (parseError) {
+        console.error(`❌ Erro ao processar JSON: ${parseError.message}`);
+        console.log(`📝 Dados recebidos: "${rawData}"`);
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            message: "Formato inválido. Apenas JSON é aceito.",
+          })
+        );
+        return;
       }
 
       console.log(`\n🔀 ROTEANDO PARA HANDLER...`);
